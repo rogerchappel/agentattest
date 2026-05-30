@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { agentAttestVersion } from "./index.js";
+import { initCommand } from "./commands/init.js";
 
 export function helpText(): string {
   return `agentattest ${agentAttestVersion}
@@ -20,7 +21,12 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
     return 0;
   }
 
-  console.error(`Unknown command: ${argv[0]}`);
+  const [command, ...args] = argv;
+  if (command === "init") {
+    return initCommand(process.cwd(), args);
+  }
+
+  console.error(`Unknown command: ${command}`);
   console.error(helpText());
   return 1;
 }
