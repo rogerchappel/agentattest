@@ -3,6 +3,7 @@
 import { agentAttestVersion } from "./index.js";
 import { collectCommand } from "./commands/collect.js";
 import { initCommand } from "./commands/init.js";
+import { markdownCommand } from "./commands/markdown.js";
 import { verifyCommand } from "./commands/verify.js";
 
 export function helpText(): string {
@@ -32,6 +33,9 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
   }
   if (command === "verify") {
     return verifyCommand(process.cwd(), args);
+  }
+  if (command === "markdown") {
+    return markdownCommand(process.cwd(), args);
   }
 
   console.error(`Unknown command: ${command}`);
