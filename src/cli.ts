@@ -3,6 +3,7 @@
 import { agentAttestVersion } from "./index.js";
 import { collectCommand } from "./commands/collect.js";
 import { initCommand } from "./commands/init.js";
+import { verifyCommand } from "./commands/verify.js";
 
 export function helpText(): string {
   return `agentattest ${agentAttestVersion}
@@ -28,6 +29,9 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
   }
   if (command === "collect") {
     return collectCommand(process.cwd(), args);
+  }
+  if (command === "verify") {
+    return verifyCommand(process.cwd(), args);
   }
 
   console.error(`Unknown command: ${command}`);
