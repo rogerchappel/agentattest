@@ -2,6 +2,17 @@
   "name": "agentattest",
   "version": "0.1.0",
   "description": "Local-first provenance receipts for agent-assisted git changes.",
+  "homepage": "https://github.com/rogerchappel/agentattest#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/rogerchappel/agentattest.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rogerchappel/agentattest/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
   "type": "module",
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
@@ -15,9 +26,14 @@
     }
   },
   "files": [
-    "dist",
+    "dist/src",
+    "docs",
     "examples",
     "README.md",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "RELEASE_NOTES.md",
     "LICENSE"
   ],
   "scripts": {

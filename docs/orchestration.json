@@ -1,0 +1,30 @@
+{
+  "name": "agentattest",
+  "classification": "ship-ready",
+  "releaseCandidate": {
+    "branch": "release-candidate/agentattest",
+    "requiredChecks": [
+      "npm run release:check",
+      "bash scripts/validate.sh",
+      "real CLI smoke: init, collect, verify, markdown, tamper failure"
+    ],
+    "artifacts": [
+      "agent-attestation.json",
+      "RELEASE_NOTES.md"
+    ]
+  },
+  "safetyBoundary": {
+    "localOnly": true,
+    "cryptographicProvenance": false,
+    "tamperProof": false,
+    "requiresReviewerJudgment": true
+  },
+  "commands": {
+    "install": "npm ci",
+    "typecheck": "npm run check",
+    "test": "npm test",
+    "build": "npm run build",
+    "releaseCheck": "npm run release:check",
+    "repositoryValidation": "bash scripts/validate.sh"
+  }
+}

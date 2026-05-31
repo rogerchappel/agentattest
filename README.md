@@ -9,6 +9,13 @@ results into a JSON receipt that can be checked later.
 This repository is early-stage. Receipts are unsigned local JSON; they are useful
 for review and handoff, not tamper-proof supply-chain attestations.
 
+## Safety Boundary
+
+AgentAttest is a local review aid. It does not create cryptographic provenance,
+does not manage signing keys, and does not make a branch trustworthy by itself.
+Treat a receipt as a compact record of what changed and what was run, then review
+the code and verification results normally.
+
 ## Install
 
 ```sh
@@ -51,6 +58,19 @@ Example config:
 }
 ```
 
+See [examples/basic-config/.agentattest.json](examples/basic-config/.agentattest.json)
+and [examples/basic-receipt.md](examples/basic-receipt.md) for the smallest
+expected workflow artifacts.
+
+## What Gets Recorded
+
+- Git branch, head commit, remote URL when available, and the `--since` ref.
+- Changed files from `git diff --name-status --find-renames <since>...HEAD`.
+- SHA-256 hashes and file sizes for files that still exist.
+- Verification commands from `.agentattest.json` and their exit codes, duration,
+  stdout, and stderr.
+- Runtime hints including Node.js version, platform, and CPU architecture.
+
 ## Verify
 
 Run the release check before opening a pull request:
@@ -75,6 +95,13 @@ should be small, reviewable, and verified before review.
 ## Security
 
 See [SECURITY.md](SECURITY.md) for vulnerability reporting guidance.
+
+## Documentation
+
+- [PRD](docs/PRD.md)
+- [Tasks](docs/TASKS.md)
+- [Orchestration](docs/ORCHESTRATION.md)
+- [Machine-readable orchestration](docs/orchestration.json)
 
 ## License
 
