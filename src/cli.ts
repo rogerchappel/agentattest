@@ -1,0 +1,53 @@
+#!/usr/bin/env node
+
+import { agentAttestVersion } from "./index.js";
+import { collectCommand } from "./commands/collect.js";
+import { initCommand } from "./commands/init.js";
+import { markdownCommand } from "./commands/markdown.js";
+import { verifyCommand } from "./commands/verify.js";
+
+export function helpText(): string {
+  return `agentattest ${agentAttestVersion}
+
+Usage:
+  agentattest init
+  agentattest collect --since <ref>
+  agentattest verify <agent-attestation.json>
+  agentattest markdown <agent-attestation.json>
+
+Local-first provenance receipts for agent-assisted git changes.`;
+}
+
+export async function main(argv = process.argv.slice(2)): Promise<number> {
+  if (argv.includes("--help") || argv.includes("-h") || argv.length === 0) {
+    console.log(helpText());
+    return 0;
+  }
+
+  const [command, ...args] = argv;
+  if (command === "init") {
+    return initCommand(process.cwd(), args);
+  }
+  if (command === "collect") {
+    return collectCommand(process.cwd(), args);
+  }
+  if (command === "verify") {
+    return verifyCommand(process.cwd(), args);
+  }
+  if (command === "markdown") {
+    return markdownCommand(process.cwd(), args);
+  }
+
+  console.error(`Unknown command: ${command}`);
+  console.error(helpText());
+  return 1;
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().then((code) => {
+    process.exitCode = code;
+  }).catch((error: unknown) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  });
+}

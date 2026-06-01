@@ -2,18 +2,12 @@
 
 ## Supported Versions
 
-Replace this section with the supported versions for `agentattest`.
+AgentAttest has not published a stable release yet.
 
-Example:
-
-```md
 | Version | Supported |
 | --- | --- |
-| .x | Yes |
-| < .0 | No |
-```
-
-If the project does not publish versioned releases yet, say that clearly.
+| 0.1.x release candidates | Best effort |
+| < 0.1.0 | No |
 
 ## Reporting a Vulnerability
 
@@ -46,6 +40,7 @@ In scope:
 - Vulnerabilities in agentattest.
 - Insecure default configuration shipped by this project.
 - CI, release, or dependency guidance maintained by this project.
+- Misleading provenance, signing, or tamper-resistance claims in project docs or output.
 
 Out of scope:
 
@@ -56,3 +51,9 @@ Out of scope:
 ## Disclosure
 
 Coordinate disclosure with maintainers before publishing vulnerability details.
+
+## Local Receipt Caveat
+
+AgentAttest receipts are unsigned local JSON. A receipt can be edited after it is
+created, and command output can include sensitive data if configured commands
+print it. Do not treat receipts as secrets or as cryptographic proof.

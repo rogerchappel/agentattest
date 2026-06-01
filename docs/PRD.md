@@ -1,6 +1,6 @@
 # AgentAttest PRD
 
-Status: in-progress
+Status: MVP release candidate
 
 ## Summary
 
@@ -45,3 +45,8 @@ Sources/inspiration:
 - Tampering with a captured file causes verification to fail.
 - Docs make the safety boundary obvious.
 
+## Release readiness
+
+- Required docs: `README.md`, `docs/PRD.md`, `docs/TASKS.md`, `docs/ORCHESTRATION.md`, `docs/orchestration.json`, `SECURITY.md`, and `CONTRIBUTING.md`.
+- Required checks: `npm run release:check`, `bash scripts/validate.sh`, and a real CLI smoke in a temporary git repository.
+- Required release note: `RELEASE_NOTES.md` with verification results, limitations, and classification.

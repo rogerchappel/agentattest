@@ -9,7 +9,10 @@ format and uses semantic versioning when versioned releases are published.
 
 ### Added
 
-- Initial project setup.
+- Local-first `agentattest` CLI with `init`, `collect`, `verify`, and `markdown` commands.
+- JSON receipts with git metadata, changed-file hashes, environment hints, and verification command results.
+- Temporary git repository tests and fixture coverage for the end-to-end receipt workflow.
+- Documentation, examples, orchestration metadata, and release-candidate notes for the MVP safety boundary.
 
 ## Release Links
 

@@ -1,0 +1,7 @@
+{
+  "name": "agentattest-fixture-basic-repo",
+  "private": true,
+  "scripts": {
+    "test": "node -e \"process.exit(0)\""
+  }
+}
