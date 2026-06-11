@@ -5,7 +5,7 @@
   "homepage": "https://github.com/rogerchappel/agentattest#readme",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/rogerchappel/agentattest.git"
+    "url": "git+https://github.com/rogerchappel/agentattest.git"
   },
   "bugs": {
     "url": "https://github.com/rogerchappel/agentattest/issues"
@@ -56,13 +56,5 @@
   "devDependencies": {
     "@types/node": "^25.9.1",
     "typescript": "^6.0.3"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/rogerchappel/agentattest"
-  },
-  "bugs": {
-    "url": "https://github.com/rogerchappel/agentattest/issues"
-  },
-  "homepage": "https://github.com/rogerchappel/agentattest#readme"
+  }
 }
