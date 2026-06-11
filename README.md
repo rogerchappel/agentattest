@@ -109,3 +109,14 @@ See [SECURITY.md](SECURITY.md) for vulnerability reporting guidance.
 ## License
 
 MIT
+
+## Development
+
+Run the same local checks used for release readiness before opening changes:
+
+- `npm run check`
+- `npm test`
+- `npm run build`
+- `npm run smoke`
+- `npm run package:smoke`
+- `npm run release:check`
