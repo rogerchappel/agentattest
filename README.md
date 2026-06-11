@@ -62,6 +62,9 @@ See [examples/basic-config/.agentattest.json](examples/basic-config/.agentattest
 and [examples/basic-receipt.md](examples/basic-receipt.md) for the smallest
 expected workflow artifacts.
 
+For a step-by-step local demo, see
+[docs/tutorials/review-receipt-workflow.md](docs/tutorials/review-receipt-workflow.md).
+
 ## What Gets Recorded
 
 - Git branch, head commit, remote URL when available, and the `--since` ref.
