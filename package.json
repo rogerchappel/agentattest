@@ -34,7 +34,8 @@
     "CONTRIBUTING.md",
     "SECURITY.md",
     "RELEASE_NOTES.md",
-    "LICENSE"
+    "LICENSE",
+    "CODE_OF_CONDUCT.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
