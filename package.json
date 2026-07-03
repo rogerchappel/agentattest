@@ -40,6 +40,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit",
     "test": "npm run build && node --test dist/test/*.test.js",
     "smoke": "npm run build && node dist/src/cli.js --help && node -e \"const {mkdtempSync}=require('node:fs'); const {tmpdir}=require('node:os'); const {join,resolve}=require('node:path'); const {execFileSync}=require('node:child_process'); const cwd=mkdtempSync(join(tmpdir(),'agentattest-smoke-')); execFileSync(process.execPath,[resolve('dist/src/cli.js'),'init'],{cwd,stdio:'inherit'});\"",
     "package:smoke": "node scripts/package-smoke.mjs",
