@@ -9,6 +9,19 @@ results into a JSON receipt that can be checked later.
 This repository is early-stage. Receipts are unsigned local JSON; they are useful
 for review and handoff, not tamper-proof supply-chain attestations.
 
+
+## Verification
+
+Run the local quality gates before opening a pull request:
+
+```sh
+npm run lint
+npm test
+npm run smoke
+```
+
+`npm run lint` is an alias for the repository static check so contributors can use the common npm workflow without guessing the project-specific command.
+
 ## Safety Boundary
 
 AgentAttest is a local review aid. It does not create cryptographic provenance,
