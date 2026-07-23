@@ -144,6 +144,50 @@ test("collectAttestation records renamed and deleted files", async () => {
   ]);
 });
 
+test("collectAttestation records and verifies the complete local workspace", async () => {
+  const workspace = await mkdtemp(path.join(tmpdir(), "agentattest-workspace-"));
+  await writeFile(path.join(workspace, "modified.txt"), "original\n", "utf8");
+  await writeFile(path.join(workspace, "staged.txt"), "original\n", "utf8");
+  await writeFile(path.join(workspace, "delete-me.txt"), "delete\n", "utf8");
+  await writeFile(path.join(workspace, ".gitignore"), "ignored.txt\n", "utf8");
+  await git(workspace, ["init", "-b", "main"]);
+  await git(workspace, ["config", "user.email", "agentattest@example.com"]);
+  await git(workspace, ["config", "user.name", "AgentAttest Test"]);
+  await git(workspace, ["add", "."]);
+  await git(workspace, ["commit", "-m", "initial"]);
+
+  await writeFile(path.join(workspace, "modified.txt"), "working tree\n", "utf8");
+  await writeFile(path.join(workspace, "staged.txt"), "index\n", "utf8");
+  await git(workspace, ["add", "staged.txt"]);
+  await writeFile(path.join(workspace, "staged.txt"), "working tree wins\n", "utf8");
+  await writeFile(path.join(workspace, "untracked.txt"), "untracked\n", "utf8");
+  await writeFile(path.join(workspace, "ignored.txt"), "ignored\n", "utf8");
+  await git(workspace, ["rm", "delete-me.txt"]);
+
+  const attestation = await collectAttestation(workspace, "HEAD", {
+    verificationCommands: [],
+    output: "agent-attestation.json"
+  });
+
+  assert.deepEqual(attestation.files.map((file) => [file.status, file.path]), [
+    ["D", "delete-me.txt"],
+    ["M", "modified.txt"],
+    ["M", "staged.txt"],
+    ["A", "untracked.txt"]
+  ]);
+  assert.equal(attestation.files.find((file) => file.path === "staged.txt")?.sizeBytes, 18);
+  assert.deepEqual(await verifyAttestation(workspace, attestation), {
+    ok: true,
+    checked: 4,
+    issues: []
+  });
+
+  await writeFile(path.join(workspace, "untracked.txt"), "changed later\n", "utf8");
+  const changed = await verifyAttestation(workspace, attestation);
+  assert.equal(changed.ok, false);
+  assert.equal(changed.issues.find((issue) => issue.path === "untracked.txt")?.message, "sha256 mismatch");
+});
+
 async function git(cwd: string, args: string[]): Promise<void> {
   await execFileAsync("git", args, { cwd });
 }
