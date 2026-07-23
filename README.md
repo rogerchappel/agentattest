@@ -81,7 +81,10 @@ For a step-by-step local demo, see
 ## What Gets Recorded
 
 - Git branch, head commit, remote URL when available, and the `--since` ref.
-- Changed files from `git diff --name-status --find-renames <since>...HEAD`.
+- Committed, staged, and unstaged files relative to the merge base of `--since`
+  and `HEAD`, reconciled to each path's final working-tree content.
+- Non-ignored untracked files as additions; files excluded by Git ignore rules
+  are omitted.
 - SHA-256 hashes and file sizes for files that still exist.
 - Verification commands from `.agentattest.json` and their exit codes, duration,
   stdout, and stderr.

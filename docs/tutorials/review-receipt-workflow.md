@@ -34,8 +34,11 @@ for a checked-in copy.
 node dist/src/cli.js collect --since origin/main
 ```
 
-The receipt records git metadata, changed files from the selected ref, file
-hashes for files that still exist, and configured verification command results.
+The receipt records git metadata and the workspace relative to the merge base
+of the selected ref and `HEAD`: committed, staged, and unstaged changes plus
+non-ignored untracked files. Ignored files are omitted. A path changed in both
+the index and working tree is recorded once with its final working-tree
+contents. The receipt also includes configured verification command results.
 
 ## Verify and render
 
@@ -46,4 +49,3 @@ node dist/src/cli.js markdown agent-attestation.json > agent-attestation.md
 
 Use the Markdown output in a PR or handoff note. Keep the caveat visible:
 receipts are local JSON and are not cryptographic supply-chain attestations.
-
