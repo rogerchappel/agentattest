@@ -20,13 +20,14 @@ export async function readGitMetadata(cwd: string, since: string): Promise<GitMe
 }
 
 export async function changedFilesSince(cwd: string, since: string): Promise<FileRecord[]> {
-  const output = await git(["diff", "--name-status", "--find-renames", `${since}...HEAD`], cwd);
-  if (!output) {
-    return [];
-  }
+  const base = await git(["merge-base", since, "HEAD"], cwd);
+  const [trackedOutput, untrackedOutput] = await Promise.all([
+    git(["diff", "--name-status", "--find-renames", base], cwd),
+    git(["ls-files", "--others", "--exclude-standard"], cwd)
+  ]);
 
-  const records: FileRecord[] = [];
-  for (const line of output.split("\n")) {
+  const statuses = new Map<string, string>();
+  for (const line of trackedOutput.split("\n")) {
     const parts = line.split("\t");
     const status = parts[0] ?? "";
     const filePath = parts[parts.length - 1];
@@ -34,6 +35,17 @@ export async function changedFilesSince(cwd: string, since: string): Promise<Fil
       continue;
     }
 
+    statuses.set(filePath, status);
+  }
+
+  for (const filePath of untrackedOutput.split("\n")) {
+    if (filePath) {
+      statuses.set(filePath, "A");
+    }
+  }
+
+  const records: FileRecord[] = [];
+  for (const [filePath, status] of statuses) {
     if (status.startsWith("D")) {
       records.push({
         path: filePath,
