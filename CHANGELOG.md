@@ -7,6 +7,10 @@ format and uses semantic versioning when versioned releases are published.
 
 ## [Unreleased]
 
+### Fixed
+
+- Verify workspace-relative files correctly when a receipt is stored in a subdirectory.
+
 ### Added
 
 - Local-first `agentattest` CLI with `init`, `collect`, `verify`, and `markdown` commands.

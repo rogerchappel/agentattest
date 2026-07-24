@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { cp, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -92,31 +92,42 @@ test("collect creates a verifiable receipt from a real git repository", async ()
   await writeFile(path.join(workspace, "README.md"), "# Fixture Project\n\nChanged by the e2e test.\n", "utf8");
   await git(workspace, ["add", "."]);
   await git(workspace, ["commit", "-m", "change fixture"]);
+  await mkdir(path.join(workspace, "receipts"));
 
-  const { stdout: collectStdout } = await execFileAsync("node", [cliPath, "collect", "--since", "HEAD~1"], {
-    cwd: workspace
-  });
-  assert.match(collectStdout, /Wrote agent-attestation\.json/);
+  const receiptPath = "receipts/receipt.json";
+  const { stdout: collectStdout } = await execFileAsync(
+    "node",
+    [cliPath, "collect", "--since", "HEAD~1", "--output", receiptPath],
+    { cwd: workspace }
+  );
+  assert.match(collectStdout, /Wrote receipts\/receipt\.json/);
 
-  const receipt = JSON.parse(await readFile(path.join(workspace, "agent-attestation.json"), "utf8")) as AgentAttestation;
+  const receipt = JSON.parse(await readFile(path.join(workspace, receiptPath), "utf8")) as AgentAttestation;
   assert.equal(receipt.files.length, 1);
   assert.equal(receipt.files[0]?.path, "README.md");
   assert.equal(receipt.verification.results[0]?.exitCode, 0);
 
-  const { stdout: verifyStdout } = await execFileAsync("node", [cliPath, "verify", "agent-attestation.json"], {
+  const { stdout: verifyStdout } = await execFileAsync("node", [cliPath, "verify", receiptPath], {
     cwd: workspace
   });
   assert.match(verifyStdout, /Verified 1 file/);
 
-  const { stdout: markdownStdout } = await execFileAsync("node", [cliPath, "markdown", "agent-attestation.json"], {
+  const { stdout: markdownStdout } = await execFileAsync("node", [cliPath, "markdown", receiptPath], {
     cwd: workspace
   });
   assert.match(markdownStdout, /Workspace matches receipt: yes/);
 
   await writeFile(path.join(workspace, "README.md"), "# Fixture Project\n\nTampered after collection.\n", "utf8");
   await assert.rejects(
-    execFileAsync("node", [cliPath, "verify", "agent-attestation.json"], { cwd: workspace }),
+    execFileAsync("node", [cliPath, "verify", receiptPath], { cwd: workspace }),
     /Verification failed/
+  );
+  await assert.rejects(
+    execFileAsync("node", [cliPath, "markdown", receiptPath], { cwd: workspace }),
+    (error: unknown) => {
+      assert.match((error as { stdout?: string }).stdout ?? "", /Workspace matches receipt: no/);
+      return true;
+    }
   );
 });
 

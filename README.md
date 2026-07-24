@@ -62,6 +62,11 @@ Render the receipt as markdown for a PR or handoff note:
 npm exec -- agentattest markdown agent-attestation.json
 ```
 
+Receipt output may be stored in a subdirectory, for example
+`receipts/agent-attestation.json`. Run `verify` and `markdown` from the
+repository workspace whose files were collected; recorded file paths are
+workspace-relative and do not depend on the receipt's location.
+
 Example config:
 
 ```json
