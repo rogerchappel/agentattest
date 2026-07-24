@@ -47,5 +47,10 @@ node dist/src/cli.js verify agent-attestation.json
 node dist/src/cli.js markdown agent-attestation.json > agent-attestation.md
 ```
 
+The receipt can live below the workspace root, such as
+`receipts/agent-attestation.json`. Invoke both commands from the collected
+repository workspace and pass that nested path. AgentAttest resolves recorded
+file paths from the workspace, not from the receipt's directory.
+
 Use the Markdown output in a PR or handoff note. Keep the caveat visible:
 receipts are local JSON and are not cryptographic supply-chain attestations.
