@@ -11,7 +11,7 @@ export async function markdownCommand(cwd: string, args: string[]): Promise<numb
 
   const absolutePath = path.resolve(cwd, attestationPath);
   const attestation = await readAttestation(absolutePath);
-  const report = await verifyAttestation(path.dirname(absolutePath), attestation);
+  const report = await verifyAttestation(cwd, attestation);
 
   console.log(formatMarkdown(attestation, report.ok));
   return report.ok ? 0 : 1;

@@ -10,7 +10,7 @@ export async function verifyCommand(cwd: string, args: string[]): Promise<number
 
   const absolutePath = path.resolve(cwd, attestationPath);
   const attestation = await readAttestation(absolutePath);
-  const report = await verifyAttestation(path.dirname(absolutePath), attestation);
+  const report = await verifyAttestation(cwd, attestation);
 
   if (report.ok) {
     console.log(`Verified ${report.checked} file(s)`);
