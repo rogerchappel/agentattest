@@ -65,7 +65,9 @@ npm exec -- agentattest markdown agent-attestation.json
 Receipt output may be stored in a subdirectory, for example
 `receipts/agent-attestation.json`. Run `verify` and `markdown` from the
 repository workspace whose files were collected; recorded file paths are
-workspace-relative and do not depend on the receipt's location.
+workspace-relative and do not depend on the receipt's location. The selected
+receipt output is excluded from its own file inventory, so collecting again to
+the same path produces a receipt that can still be verified.
 
 Example config:
 
