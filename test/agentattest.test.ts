@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { cp, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -78,6 +78,16 @@ test("CLI help advertises implemented commands", async () => {
   assert.match(stdout, /agentattest markdown <agent-attestation\.json>/);
 });
 
+test("CLI executes when invoked through a symlinked path", async () => {
+  const workspace = await mkdtemp(path.join(tmpdir(), "agentattest-cli-link-"));
+  const linkedCli = path.join(workspace, "agentattest");
+  await symlink(cliPath, linkedCli);
+
+  const { stdout } = await execFileAsync("node", [linkedCli, "--help"]);
+
+  assert.match(stdout, /agentattest collect --since <ref>/);
+});
+
 test("collect creates a verifiable receipt from a real git repository", async () => {
   const workspace = await mkdtemp(path.join(tmpdir(), "agentattest-e2e-"));
   await cp(path.join(repoRoot, "tests/fixtures/basic-repo"), workspace, { recursive: true });
@@ -116,6 +126,22 @@ test("collect creates a verifiable receipt from a real git repository", async ()
     cwd: workspace
   });
   assert.match(markdownStdout, /Workspace matches receipt: yes/);
+
+  await execFileAsync(
+    "node",
+    [cliPath, "collect", "--since", "HEAD~1", "--output", receiptPath],
+    { cwd: workspace }
+  );
+  const repeatedReceipt = JSON.parse(
+    await readFile(path.join(workspace, receiptPath), "utf8")
+  ) as AgentAttestation;
+  assert.equal(repeatedReceipt.files.some((file) => file.path === receiptPath), false);
+  const { stdout: repeatedVerifyStdout } = await execFileAsync(
+    "node",
+    [cliPath, "verify", receiptPath],
+    { cwd: workspace }
+  );
+  assert.match(repeatedVerifyStdout, /Verified 1 file/);
 
   await writeFile(path.join(workspace, "README.md"), "# Fixture Project\n\nTampered after collection.\n", "utf8");
   await assert.rejects(

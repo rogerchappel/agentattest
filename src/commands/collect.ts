@@ -18,7 +18,7 @@ export async function collectCommand(cwd: string, args: string[]): Promise<numbe
   const outputArg = valueAfter(args, "--output");
   const config = await readConfig(cwd);
   const output = outputArg ?? config.output;
-  const attestation = await collectAttestation(cwd, since, config);
+  const attestation = await collectAttestation(cwd, since, { ...config, output });
   const target = path.resolve(cwd, output);
 
   await writeFile(target, `${JSON.stringify(attestation, null, 2)}\n`, "utf8");
