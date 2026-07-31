@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { cp, mkdir, mkdtemp, readFile, symlink, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -33,10 +33,16 @@ test("default config is written once and can be read back", async () => {
 
 test("verifyAttestation detects matching and changed files", async () => {
   const workspace = await mkdtemp(path.join(tmpdir(), "agentattest-verify-"));
+  await writeFile(path.join(workspace, "README.md"), "# original\n", "utf8");
+  await git(workspace, ["init", "-b", "main"]);
+  await git(workspace, ["config", "user.email", "agentattest@example.com"]);
+  await git(workspace, ["config", "user.name", "AgentAttest Test"]);
+  await git(workspace, ["add", "."]);
+  await git(workspace, ["commit", "-m", "initial"]);
   await writeFile(path.join(workspace, "README.md"), "# demo\n", "utf8");
 
   const file = await hashFile(workspace, "README.md", "M");
-  const attestation = makeAttestation([file]);
+  const attestation = makeAttestation([file], "HEAD");
 
   assert.deepEqual(await verifyAttestation(workspace, attestation), {
     ok: true,
@@ -53,9 +59,15 @@ test("verifyAttestation detects matching and changed files", async () => {
 
 test("markdown command renders a reviewable receipt", async () => {
   const workspace = await mkdtemp(path.join(tmpdir(), "agentattest-markdown-"));
+  await writeFile(path.join(workspace, "README.md"), "# original\n", "utf8");
+  await git(workspace, ["init", "-b", "main"]);
+  await git(workspace, ["config", "user.email", "agentattest@example.com"]);
+  await git(workspace, ["config", "user.name", "AgentAttest Test"]);
+  await git(workspace, ["add", "."]);
+  await git(workspace, ["commit", "-m", "initial"]);
   await writeFile(path.join(workspace, "README.md"), "# demo\n", "utf8");
   const file = await hashFile(workspace, "README.md", "M");
-  const attestation = makeAttestation([file]);
+  const attestation = makeAttestation([file], "HEAD");
   const receiptPath = path.join(workspace, "agent-attestation.json");
   await writeFile(receiptPath, `${JSON.stringify(attestation, null, 2)}\n`, "utf8");
 
@@ -143,6 +155,23 @@ test("collect creates a verifiable receipt from a real git repository", async ()
   );
   assert.match(repeatedVerifyStdout, /Verified 1 file/);
 
+  await writeFile(path.join(workspace, "created-after-collection.txt"), "late change\n", "utf8");
+  await assert.rejects(
+    execFileAsync("node", [cliPath, "verify", receiptPath], { cwd: workspace }),
+    (error: unknown) => {
+      assert.match((error as { stderr?: string }).stderr ?? "", /created-after-collection\.txt: new workspace change \(A\)/);
+      return true;
+    }
+  );
+  await assert.rejects(
+    execFileAsync("node", [cliPath, "markdown", receiptPath], { cwd: workspace }),
+    (error: unknown) => {
+      assert.match((error as { stdout?: string }).stdout ?? "", /Workspace matches receipt: no/);
+      return true;
+    }
+  );
+  await rm(path.join(workspace, "created-after-collection.txt"));
+
   await writeFile(path.join(workspace, "README.md"), "# Fixture Project\n\nTampered after collection.\n", "utf8");
   await assert.rejects(
     execFileAsync("node", [cliPath, "verify", receiptPath], { cwd: workspace }),
@@ -219,6 +248,16 @@ test("collectAttestation records and verifies the complete local workspace", asy
     issues: []
   });
 
+  await git(workspace, ["rm", "-f", "modified.txt"]);
+  const statusChanged = await verifyAttestation(workspace, attestation);
+  assert.equal(statusChanged.ok, false);
+  assert.equal(
+    statusChanged.issues.find((issue) => issue.path === "modified.txt")?.message,
+    "status changed from M to D"
+  );
+  await git(workspace, ["reset", "HEAD", "modified.txt"]);
+  await writeFile(path.join(workspace, "modified.txt"), "working tree\n", "utf8");
+
   await writeFile(path.join(workspace, "untracked.txt"), "changed later\n", "utf8");
   const changed = await verifyAttestation(workspace, attestation);
   assert.equal(changed.ok, false);
@@ -229,7 +268,7 @@ async function git(cwd: string, args: string[]): Promise<void> {
   await execFileAsync("git", args, { cwd });
 }
 
-function makeAttestation(files: AgentAttestation["files"]): AgentAttestation {
+function makeAttestation(files: AgentAttestation["files"], since = "HEAD~1"): AgentAttestation {
   return {
     schemaVersion: 1,
     generatedAt: "2026-05-31T00:00:00.000Z",
@@ -242,7 +281,7 @@ function makeAttestation(files: AgentAttestation["files"]): AgentAttestation {
       branch: "main",
       headCommit: "abc123",
       headCommitShort: "abc123",
-      since: "HEAD~1"
+      since
     },
     environment: {
       node: process.version,
