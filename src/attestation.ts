@@ -2,15 +2,23 @@ import { agentAttestVersion } from "./index.js";
 import type { AgentAttestation, AgentAttestConfig } from "./types.js";
 import { changedFilesSince, readGitMetadata } from "./git.js";
 import { runShellCommand } from "./process.js";
+import path from "node:path";
 
 export async function collectAttestation(
   cwd: string,
   since: string,
   config: AgentAttestConfig
 ): Promise<AgentAttestation> {
+  const outputPath = path.resolve(cwd, config.output);
+  const relativeOutputPath = path.relative(cwd, outputPath);
+  const excludedPaths = new Set<string>();
+  if (relativeOutputPath && !relativeOutputPath.startsWith(`..${path.sep}`) && relativeOutputPath !== "..") {
+    excludedPaths.add(relativeOutputPath.split(path.sep).join("/"));
+  }
+
   const [git, files] = await Promise.all([
     readGitMetadata(cwd, since),
-    changedFilesSince(cwd, since)
+    changedFilesSince(cwd, since, excludedPaths)
   ]);
   const results = [];
 

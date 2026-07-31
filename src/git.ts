@@ -19,7 +19,11 @@ export async function readGitMetadata(cwd: string, since: string): Promise<GitMe
   };
 }
 
-export async function changedFilesSince(cwd: string, since: string): Promise<FileRecord[]> {
+export async function changedFilesSince(
+  cwd: string,
+  since: string,
+  excludedPaths: ReadonlySet<string> = new Set()
+): Promise<FileRecord[]> {
   const base = await git(["merge-base", since, "HEAD"], cwd);
   const [trackedOutput, untrackedOutput] = await Promise.all([
     git(["diff", "--name-status", "--find-renames", base], cwd),
@@ -46,6 +50,10 @@ export async function changedFilesSince(cwd: string, since: string): Promise<Fil
 
   const records: FileRecord[] = [];
   for (const [filePath, status] of statuses) {
+    if (excludedPaths.has(filePath)) {
+      continue;
+    }
+
     if (status.startsWith("D")) {
       records.push({
         path: filePath,
