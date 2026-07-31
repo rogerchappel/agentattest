@@ -56,6 +56,12 @@ Verify that the current workspace still matches a receipt:
 npm exec -- agentattest verify agent-attestation.json
 ```
 
+Verification recomputes the complete Git change inventory from the receipt's
+recorded `--since` ref. It fails when a recorded file's content, size, or change
+status differs; when a recorded change is no longer present; or when a new
+tracked or non-ignored untracked change appears. Ignored files and the receipt
+file passed to `verify` or `markdown` are excluded from this comparison.
+
 Render the receipt as markdown for a PR or handoff note:
 
 ```sh
@@ -66,8 +72,9 @@ Receipt output may be stored in a subdirectory, for example
 `receipts/agent-attestation.json`. Run `verify` and `markdown` from the
 repository workspace whose files were collected; recorded file paths are
 workspace-relative and do not depend on the receipt's location. The selected
-receipt output is excluded from its own file inventory, so collecting again to
-the same path produces a receipt that can still be verified.
+receipt output is excluded from its own file inventory and from later
+verification, so collecting again to the same path produces a receipt that can
+still be verified.
 
 Example config:
 
