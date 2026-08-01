@@ -1,6 +1,7 @@
 import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import { hashFile } from "./hash.js";
+import { changedFilesSince } from "./git.js";
 import type { AgentAttestation, FileRecord } from "./types.js";
 
 export type VerificationIssue = {
@@ -51,8 +52,30 @@ export async function readAttestation(filePath: string): Promise<AgentAttestatio
   return JSON.parse(await readFile(filePath, "utf8")) as AgentAttestation;
 }
 
-export async function verifyAttestation(cwd: string, attestation: AgentAttestation): Promise<VerificationReport> {
+export async function verifyAttestation(
+  cwd: string,
+  attestation: AgentAttestation,
+  excludedPaths: ReadonlySet<string> = new Set()
+): Promise<VerificationReport> {
   const issues: VerificationIssue[] = [];
+  const currentFiles = await changedFilesSince(cwd, attestation.git.since, excludedPaths);
+  const recordedByPath = new Map(attestation.files.map((file) => [file.path, file]));
+  const currentByPath = new Map(currentFiles.map((file) => [file.path, file]));
+
+  for (const file of currentFiles) {
+    const recorded = recordedByPath.get(file.path);
+    if (!recorded) {
+      issues.push({ path: file.path, message: `new workspace change (${file.status})` });
+    } else if (recorded.status !== file.status) {
+      issues.push({ path: file.path, message: `status changed from ${recorded.status} to ${file.status}` });
+    }
+  }
+
+  for (const file of attestation.files) {
+    if (!currentByPath.has(file.path)) {
+      issues.push({ path: file.path, message: `recorded workspace change is absent (${file.status})` });
+    }
+  }
 
   for (const file of attestation.files) {
     const issue = await verifyFile(cwd, file);
