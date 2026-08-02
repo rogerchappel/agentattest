@@ -236,7 +236,7 @@ test("collectAttestation preserves non-ASCII and Git-quoted paths", async () => 
   ]);
   assert.deepEqual(await verifyAttestation(workspace, attestation), {
     ok: true,
-    checked: 1,
+    checked: 2,
     issues: []
   });
 });

@@ -26,26 +26,28 @@ export async function changedFilesSince(
 ): Promise<FileRecord[]> {
   const base = await git(["merge-base", since, "HEAD"], cwd);
   const [trackedOutput, untrackedOutput] = await Promise.all([
-    git(["diff", "--name-status", "--find-renames", base], cwd),
-    git(["ls-files", "--others", "--exclude-standard"], cwd)
+    git(["diff", "--name-status", "--find-renames", "-z", base], cwd),
+    git(["ls-files", "--others", "--exclude-standard", "-z"], cwd)
   ]);
 
   const statuses = new Map<string, string>();
-  for (const line of trackedOutput.split("\n")) {
-    const parts = line.split("\t");
-    const status = parts[0] ?? "";
-    const filePath = parts[parts.length - 1];
-    if (!filePath) {
-      continue;
+  const trackedFields = splitNulFields(trackedOutput);
+  for (let index = 0; index < trackedFields.length;) {
+    const status = trackedFields[index++];
+    const sourcePath = trackedFields[index++];
+    const filePath = status?.startsWith("R") || status?.startsWith("C")
+      ? trackedFields[index++]
+      : sourcePath;
+
+    if (!status || sourcePath === undefined || filePath === undefined) {
+      throw new Error("Unexpected NUL-delimited output from git diff --name-status");
     }
 
     statuses.set(filePath, status);
   }
 
-  for (const filePath of untrackedOutput.split("\n")) {
-    if (filePath) {
-      statuses.set(filePath, "A");
-    }
+  for (const filePath of splitNulFields(untrackedOutput)) {
+    statuses.set(filePath, "A");
   }
 
   const records: FileRecord[] = [];
@@ -68,4 +70,16 @@ export async function changedFilesSince(
   }
 
   return records.sort((a, b) => a.path.localeCompare(b.path));
+}
+
+function splitNulFields(output: string): string[] {
+  if (!output) {
+    return [];
+  }
+
+  const fields = output.split("\0");
+  if (fields.pop() !== "") {
+    throw new Error("Unexpected unterminated NUL-delimited Git output");
+  }
+  return fields;
 }
