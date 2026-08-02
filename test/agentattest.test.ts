@@ -210,6 +210,37 @@ test("collectAttestation records renamed and deleted files", async () => {
   ]);
 });
 
+test("collectAttestation preserves non-ASCII and Git-quoted paths", async () => {
+  const workspace = await mkdtemp(path.join(tmpdir(), "agentattest-paths-"));
+  const renamedPath = "renamed café\tfile.md";
+  const deletedPath = "deleted café\nfile.md";
+  await writeFile(path.join(workspace, "original café.md"), "renamed\n", "utf8");
+  await writeFile(path.join(workspace, deletedPath), "deleted\n", "utf8");
+  await git(workspace, ["init", "-b", "main"]);
+  await git(workspace, ["config", "user.email", "agentattest@example.com"]);
+  await git(workspace, ["config", "user.name", "AgentAttest Test"]);
+  await git(workspace, ["add", "."]);
+  await git(workspace, ["commit", "-m", "initial"]);
+  await git(workspace, ["mv", "original café.md", renamedPath]);
+  await git(workspace, ["rm", deletedPath]);
+  await git(workspace, ["commit", "-m", "rename and delete unusual paths"]);
+
+  const attestation = await collectAttestation(workspace, "HEAD~1", {
+    verificationCommands: [],
+    output: "agent-attestation.json"
+  });
+
+  assert.deepEqual(attestation.files.map((file) => [file.status, file.path]), [
+    ["D", deletedPath],
+    ["R100", renamedPath]
+  ]);
+  assert.deepEqual(await verifyAttestation(workspace, attestation), {
+    ok: true,
+    checked: 2,
+    issues: []
+  });
+});
+
 test("collectAttestation records and verifies the complete local workspace", async () => {
   const workspace = await mkdtemp(path.join(tmpdir(), "agentattest-workspace-"));
   await writeFile(path.join(workspace, "modified.txt"), "original\n", "utf8");
