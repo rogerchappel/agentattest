@@ -99,6 +99,9 @@ For a step-by-step local demo, see
   and `HEAD`, reconciled to each path's final working-tree content.
 - Non-ignored untracked files as additions; files excluded by Git ignore rules
   are omitted.
+- Repository-relative filenames are read from Git's NUL-delimited output, so
+  non-ASCII characters, whitespace, and characters Git normally quotes are
+  preserved exactly.
 - SHA-256 hashes and file sizes for files that still exist.
 - Verification commands from `.agentattest.json` and their exit codes, duration,
   stdout, and stderr.
