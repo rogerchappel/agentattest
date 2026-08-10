@@ -2,6 +2,7 @@ import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import { hashFile } from "./hash.js";
 import { changedFilesSince } from "./git.js";
+import { git } from "./process.js";
 import type { AgentAttestation, FileRecord } from "./types.js";
 
 export type VerificationIssue = {
@@ -58,6 +59,13 @@ export async function verifyAttestation(
   excludedPaths: ReadonlySet<string> = new Set()
 ): Promise<VerificationReport> {
   const issues: VerificationIssue[] = [];
+  const currentHeadCommit = await git(["rev-parse", "HEAD"], cwd);
+  if (currentHeadCommit !== attestation.git.headCommit) {
+    issues.push({
+      path: "git.headCommit",
+      message: `recorded ${attestation.git.headCommit}, current ${currentHeadCommit}`
+    });
+  }
   const currentFiles = await changedFilesSince(cwd, attestation.git.since, excludedPaths);
   const recordedByPath = new Map(attestation.files.map((file) => [file.path, file]));
   const currentByPath = new Map(currentFiles.map((file) => [file.path, file]));
