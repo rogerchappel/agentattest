@@ -42,7 +42,7 @@ test("verifyAttestation detects matching and changed files", async () => {
   await writeFile(path.join(workspace, "README.md"), "# demo\n", "utf8");
 
   const file = await hashFile(workspace, "README.md", "M");
-  const attestation = makeAttestation([file], "HEAD");
+  const attestation = makeAttestation([file], "HEAD", await git(workspace, ["rev-parse", "HEAD"]));
 
   assert.deepEqual(await verifyAttestation(workspace, attestation), {
     ok: true,
@@ -67,7 +67,7 @@ test("markdown command renders a reviewable receipt", async () => {
   await git(workspace, ["commit", "-m", "initial"]);
   await writeFile(path.join(workspace, "README.md"), "# demo\n", "utf8");
   const file = await hashFile(workspace, "README.md", "M");
-  const attestation = makeAttestation([file], "HEAD");
+  const attestation = makeAttestation([file], "HEAD", await git(workspace, ["rev-parse", "HEAD"]));
   const receiptPath = path.join(workspace, "agent-attestation.json");
   await writeFile(receiptPath, `${JSON.stringify(attestation, null, 2)}\n`, "utf8");
 
@@ -138,6 +138,22 @@ test("collect creates a verifiable receipt from a real git repository", async ()
     cwd: workspace
   });
   assert.match(markdownStdout, /Workspace matches receipt: yes/);
+
+  const recordedHead = receipt.git.headCommit;
+  await git(workspace, ["commit", "--amend", "-m", "replace change fixture commit"]);
+  const replacementHead = await git(workspace, ["rev-parse", "HEAD"]);
+  assert.notEqual(replacementHead, recordedHead);
+  await assert.rejects(
+    execFileAsync("node", [cliPath, "verify", receiptPath], { cwd: workspace }),
+    (error: unknown) => {
+      const stderr = (error as { stderr?: string }).stderr ?? "";
+      assert.match(stderr, /git\.headCommit: recorded /);
+      assert.match(stderr, new RegExp(recordedHead));
+      assert.match(stderr, new RegExp(replacementHead));
+      assert.doesNotMatch(stderr, /Verified 1 file/);
+      return true;
+    }
+  );
 
   await execFileAsync(
     "node",
@@ -295,11 +311,16 @@ test("collectAttestation records and verifies the complete local workspace", asy
   assert.equal(changed.issues.find((issue) => issue.path === "untracked.txt")?.message, "sha256 mismatch");
 });
 
-async function git(cwd: string, args: string[]): Promise<void> {
-  await execFileAsync("git", args, { cwd });
+async function git(cwd: string, args: string[]): Promise<string> {
+  const { stdout } = await execFileAsync("git", args, { cwd });
+  return stdout.trim();
 }
 
-function makeAttestation(files: AgentAttestation["files"], since = "HEAD~1"): AgentAttestation {
+function makeAttestation(
+  files: AgentAttestation["files"],
+  since = "HEAD~1",
+  headCommit = "abc123"
+): AgentAttestation {
   return {
     schemaVersion: 1,
     generatedAt: "2026-05-31T00:00:00.000Z",
@@ -310,8 +331,8 @@ function makeAttestation(files: AgentAttestation["files"], since = "HEAD~1"): Ag
     statement: "Local agent-assisted change receipt. This is not cryptographic supply-chain provenance.",
     git: {
       branch: "main",
-      headCommit: "abc123",
-      headCommitShort: "abc123",
+      headCommit,
+      headCommitShort: headCommit.slice(0, 7),
       since
     },
     environment: {

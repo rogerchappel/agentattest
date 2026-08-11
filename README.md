@@ -62,6 +62,14 @@ status differs; when a recorded change is no longer present; or when a new
 tracked or non-ignored untracked change appears. Ignored files and the receipt
 file passed to `verify` or `markdown` are excluded from this comparison.
 
+Verification also requires the repository's current `HEAD` to equal the
+receipt's recorded `git.headCommit`. The recorded `git.headCommitShort`, branch,
+and remote URL are informational: changing a branch name or remote configuration
+does not by itself fail verification. The recorded `git.since` ref is used to
+recompute the change inventory, but its name is not compared as repository
+identity. Receipts remain unsigned local JSON, so these checks detect workspace
+drift but do not prevent someone from editing the receipt itself.
+
 Render the receipt as markdown for a PR or handoff note:
 
 ```sh
