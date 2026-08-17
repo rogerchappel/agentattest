@@ -86,8 +86,51 @@ test("markdown command renders a reviewable receipt", async () => {
 test("CLI help advertises implemented commands", async () => {
   const { stdout } = await execFileAsync("node", [cliPath, "--help"]);
 
-  assert.match(stdout, /agentattest collect --since <ref>/);
+  assert.match(stdout, /agentattest init \[--force\]/);
+  assert.match(stdout, /agentattest collect --since <ref> \[--output <path>\]/);
   assert.match(stdout, /agentattest markdown <agent-attestation\.json>/);
+  assert.match(stdout, /rejects unknown options and unexpected arguments/);
+});
+
+test("CLI rejects malformed command arguments before writing files", async () => {
+  const workspace = await mkdtemp(path.join(tmpdir(), "agentattest-usage-"));
+  await git(workspace, ["init", "-b", "main"]);
+  await git(workspace, ["config", "user.email", "agentattest@example.com"]);
+  await git(workspace, ["config", "user.name", "AgentAttest Test"]);
+  await writeFile(path.join(workspace, "README.md"), "# fixture\n", "utf8");
+  await git(workspace, ["add", "."]);
+  await git(workspace, ["commit", "-m", "fixture"]);
+
+  const malformed = [
+    ["init", "--bogus"],
+    ["init", "--force", "extra"],
+    ["collect", "--since", "HEAD", "--bogus"],
+    ["collect", "--since", "HEAD", "--output"],
+    ["collect", "--since", "--output", "receipt.json"],
+    ["collect", "--since", "HEAD", "extra"],
+    ["collect", "--since", "HEAD", "--since", "HEAD"],
+    ["verify"],
+    ["verify", "agent-attestation.json", "ignored"],
+    ["verify", "--bogus"],
+    ["markdown"],
+    ["markdown", "agent-attestation.json", "ignored"],
+    ["markdown", "--bogus"]
+  ];
+
+  for (const args of malformed) {
+    await assert.rejects(
+      execFileAsync("node", [cliPath, ...args], { cwd: workspace }),
+      (error: unknown) => {
+        assert.match((error as { stderr?: string }).stderr ?? "", /^Usage: agentattest /);
+        return true;
+      },
+      args.join(" ")
+    );
+  }
+
+  await assert.rejects(readFile(path.join(workspace, ".agentattest.json")));
+  await assert.rejects(readFile(path.join(workspace, "agent-attestation.json")));
+  await assert.rejects(readFile(path.join(workspace, "receipt.json")));
 });
 
 test("CLI executes when invoked through a symlinked path", async () => {
