@@ -1,11 +1,12 @@
 import path from "node:path";
 import { readAttestation, verifyAttestation } from "../verify.js";
 import type { AgentAttestation, CommandResult, FileRecord } from "../types.js";
+import { parseReceiptPath } from "./arguments.js";
 
 export async function markdownCommand(cwd: string, args: string[]): Promise<number> {
-  const attestationPath = args[0];
+  const attestationPath = parseReceiptPath(args);
   if (!attestationPath) {
-    console.error("Missing attestation path");
+    console.error("Usage: agentattest markdown <agent-attestation.json>");
     return 1;
   }
 

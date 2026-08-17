@@ -13,10 +13,12 @@ export function helpText(): string {
   return `agentattest ${agentAttestVersion}
 
 Usage:
-  agentattest init
-  agentattest collect --since <ref>
+  agentattest init [--force]
+  agentattest collect --since <ref> [--output <path>]
   agentattest verify <agent-attestation.json>
   agentattest markdown <agent-attestation.json>
+
+Each command rejects unknown options and unexpected arguments with a usage error.
 
 Local-first provenance receipts for agent-assisted git changes.
 The collect output file is excluded from its own file inventory.`;
