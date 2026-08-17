@@ -76,6 +76,12 @@ Render the receipt as markdown for a PR or handoff note:
 npm exec -- agentattest markdown agent-attestation.json
 ```
 
+The accepted command forms are `init [--force]`, `collect --since <ref>
+[--output <path>]`, `verify <receipt-path>`, and `markdown <receipt-path>`.
+Unknown options, unexpected positional arguments, duplicate options, and
+missing option values are usage errors and exit nonzero without writing a
+config or receipt file.
+
 Receipt output may be stored in a subdirectory, for example
 `receipts/agent-attestation.json`. Run `verify` and `markdown` from the
 repository workspace whose files were collected; recorded file paths are
