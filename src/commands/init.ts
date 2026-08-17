@@ -1,8 +1,14 @@
 import path from "node:path";
 import { configExists, writeDefaultConfig } from "../config.js";
+import { parseInitArguments } from "./arguments.js";
 
 export async function initCommand(cwd: string, args: string[]): Promise<number> {
-  const overwrite = args.includes("--force");
+  const parsed = parseInitArguments(args);
+  if (!parsed) {
+    console.error("Usage: agentattest init [--force]");
+    return 1;
+  }
+  const overwrite = parsed.force;
   const existed = await configExists(cwd);
   const target = await writeDefaultConfig(cwd, overwrite);
   const displayPath = path.relative(cwd, target) || target;

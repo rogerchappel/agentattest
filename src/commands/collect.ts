@@ -2,23 +2,18 @@ import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { collectAttestation } from "../attestation.js";
 import { readConfig } from "../config.js";
-
-function valueAfter(args: string[], name: string): string | undefined {
-  const index = args.indexOf(name);
-  return index >= 0 ? args[index + 1] : undefined;
-}
+import { parseCollectArguments } from "./arguments.js";
 
 export async function collectCommand(cwd: string, args: string[]): Promise<number> {
-  const since = valueAfter(args, "--since");
-  if (!since) {
-    console.error("Missing required --since <ref>");
+  const parsed = parseCollectArguments(args);
+  if (!parsed) {
+    console.error("Usage: agentattest collect --since <ref> [--output <path>]");
     return 1;
   }
 
-  const outputArg = valueAfter(args, "--output");
   const config = await readConfig(cwd);
-  const output = outputArg ?? config.output;
-  const attestation = await collectAttestation(cwd, since, { ...config, output });
+  const output = parsed.output ?? config.output;
+  const attestation = await collectAttestation(cwd, parsed.since, { ...config, output });
   const target = path.resolve(cwd, output);
 
   await writeFile(target, `${JSON.stringify(attestation, null, 2)}\n`, "utf8");

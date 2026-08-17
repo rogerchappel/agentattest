@@ -1,10 +1,11 @@
 import path from "node:path";
 import { readAttestation, verifyAttestation } from "../verify.js";
+import { parseReceiptPath } from "./arguments.js";
 
 export async function verifyCommand(cwd: string, args: string[]): Promise<number> {
-  const attestationPath = args[0];
+  const attestationPath = parseReceiptPath(args);
   if (!attestationPath) {
-    console.error("Missing attestation path");
+    console.error("Usage: agentattest verify <agent-attestation.json>");
     return 1;
   }
 
