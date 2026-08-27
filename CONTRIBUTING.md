@@ -64,6 +64,21 @@ Next recommended task:
 
 Every contribution should include verification.
 
+The package supports Node.js 20 and newer. CI runs the full verification suite
+on Node.js 20 (the declared minimum) and Node.js 22 (the maintained primary
+version). When changing dependencies or runtime-sensitive code, run a clean
+install and the release gate on both versions:
+
+```sh
+npm ci
+npm run release:check
+bash scripts/validate.sh
+```
+
+Dependabot checks npm dependencies weekly with bounded pull requests. Review
+dependency PRs for Node.js 20 compatibility and commit regenerated lockfiles;
+major upgrades still require explicit maintainer review.
+
 Examples:
 
 - Documentation: inspect rendered Markdown or review the diff.
