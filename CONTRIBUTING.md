@@ -64,10 +64,10 @@ Next recommended task:
 
 Every contribution should include verification.
 
-The package supports Node.js 20 and newer. CI runs the full verification suite
-on Node.js 20 (the declared minimum) and Node.js 22 (the maintained primary
-version). When changing dependencies or runtime-sensitive code, run a clean
-install and the release gate on both versions:
+The package supports Node.js 20 and newer. CI runs a clean install and the full
+release check on Node.js 20 (the declared minimum), Node.js 22, and Node.js 24.
+When changing dependencies or runtime-sensitive code, run the same commands on
+all three tested versions:
 
 ```sh
 npm ci
