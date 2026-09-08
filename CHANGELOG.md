@@ -13,6 +13,7 @@ format and uses semantic versioning when versioned releases are published.
 
 ### Added
 
+- Node.js 24 coverage in the CI runtime matrix alongside Node.js 20 and 22.
 - Local-first `agentattest` CLI with `init`, `collect`, `verify`, and `markdown` commands.
 - JSON receipts with git metadata, changed-file hashes, environment hints, and verification command results.
 - Temporary git repository tests and fixture coverage for the end-to-end receipt workflow.
